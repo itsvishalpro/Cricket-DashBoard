@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vishal patel</title>
+    <style>
+        #overCard {
+            display: flex;
+        }
+        #overCard > div {
+            background-color: rgb(29, 199, 199);
+            display: flex;
+            padding: 10px;
+            margin: 2px;
+            width: 30px;
+            border-radius: 100%;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .colorful {
+            font-size: 50px;
+            font-weight: bold;
+        }
+
+        .players,.bowlers,.commentary {
+            font-size: 17px;
+            margin-top: 10px;
+        }
+        
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 5px;
+        }
+
+        #commentary {
+            max-height: 200px;
+            overflow-y: scroll;
+        }
+
+    </style>
+</head>
+<body>
+    <div>
+        <input type="text" id="InputText" placeholder="Enter Runs [0-6] or 'w'"></input>
+        <button onclick="addToList()">Update</button>
+    </div>
+    
+    <div id="totalScore"></div>
+    <div id="overScore"></div>
+    <div id="overCard"></div>
+    <div id="currentBowler"></div>
+    
+    <div id="bowlerSelection" style="display: none;">
+        <h3>Select Next Bowler</h3>
+        <select id="bowlerDropdown"></select>
+        <button onclick="changeBowler()">Set Bowler</button>
+    </div>
+    
+    <div class="players">
+        <h2>Score Board</h2>
+        <table id="playersTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Runs</th>
+                    <th>Balls Faced</th>
+                    <th>4s</th>
+                    <th>6s</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            </tbody>
+        </table>
+    </div>
+   
+    <div class="bowlers">
+        <h2>Bowlers</h2>
+        <table id="bowlersTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Overs Bowled</th>
+                    <th>Wickets Taken</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            </tbody>
+        </table>
+    </div>
+
+    <div class="commentary">
+        <h2>commentary</h2> 
+        <div id="commentary"> </div>
+    </div>
+
+    <div>
+        
+    </div>
+    
+    <script>
+        let run = 0;
+        let wkts = 0;
+        let balls = 0;
+        let overs = 0;
+        let ballInOver = 0;
+        let overRuns = 0;
+        let overArray = [];
+        
+        let playerArray = [
+            { name: "A1", runs: 0, ballsFaced: 0, fours: 0, sixes: 0, status: "current" },
+            { name: "A2", runs: 0, ballsFaced: 0, fours: 0, sixes: 0, status: "current" },
+            { name: "A3", runs: 0, ballsFaced: 0, fours: 0, sixes: 0, status: "waiting" },
+            { name: "A4", runs: 0, ballsFaced: 0, fours: 0, sixes: 0, status: "waiting" },
+            { name: "A5", runs: 0, ballsFaced: 0, fours: 0, sixes: 0, status: "waiting" },
+            { name: "A6", runs: 0, ballsFaced: 0, fours: 0, sixes: 0, status: "waiting" },
+            { name: "A7", runs: 0, ballsFaced: 0, fours: 0, sixes: 0, status: "waiting" },
+            { name: "A8", runs: 0, ballsFaced: 0, fours: 0, sixes: 0, status: "waiting" },
+            { name: "A9", runs: 0, ballsFaced: 0, fours: 0, sixes: 0, status: "waiting" },
+            { name: "A10", runs: 0, ballsFaced: 0, fours: 0, sixes: 0, status: "waiting" },
+            { name: "A11", runs: 0, ballsFaced: 0, fours: 0, sixes: 0, status: "waiting" }
+        ];
+        
+        let bowlerArray = [
+            { name: "B1", overs: 0, runsConceded: 0, wickets: 0 },
+            { name: "B2", overs: 0, runsConceded: 0, wickets: 0 },
+            { name: "B3", overs: 0, runsConceded: 0, wickets: 0 },
+            { name: "B4", overs: 0, runsConceded: 0, wickets: 0 },
+            { name: "B5", overs: 0, runsConceded: 0, wickets: 0 },
+            { name: "B6", overs: 0, runsConceded: 0, wickets: 0 }
+        ];
+
+        let currentBatsmen = [playerArray[0], playerArray[1]];
+        let currentBowlerIndex = -1;
+
+        function addToList() {
+            if (balls % 6 === 0 && currentBowlerIndex === -1) {
+                alert("Please select a bowler to start the over.");
+                showBowlerSelection();
+                return;
+            }
+            
+            let textdata = document.getElementById("InputText").value.trim();
+            document.getElementById("InputText").value = "";
+
+            if (textdata === "w") {
+                wkts++;
+                balls++;
+                overArray.push(textdata);
+                currentBatsmen[0].ballsFaced++;
+                currentBatsmen[0].status = "out";
+                bowlerArray[currentBowlerIndex].wickets++;
+                if (wkts < 10) {
+                    let nextBatsman = playerArray.find(player => player.status === "waiting");
+                    if (nextBatsman) {
+                        nextBatsman.status = "current";
+                        currentBatsmen[0] = nextBatsman;
+                    } 
+                    else {
+                        currentBatsmen.shift();
+                    }
+                } 
+                else {
+                    currentBatsmen.shift();
+                }
+            } 
+            
+            else if (!isNaN(textdata) && parseInt(textdata) >= 0 && parseInt(textdata) <= 6) {
+                let runScored = parseInt(textdata);
+                run += runScored;
+                balls++;
+                overRuns += runScored;
+                overArray.push(runScored);
+                bowlerArray[currentBowlerIndex].runsConceded += runScored;
+
+                if (currentBatsmen.length > 0) {
+                    currentBatsmen[0].runs += runScored;
+                    currentBatsmen[0].ballsFaced++;
+                    if (runScored === 4) {
+                        currentBatsmen[0].fours++;
+                    }
+                    if (runScored === 6) {
+                        currentBatsmen[0].sixes++;
+                    }
+                }
+
+                if (runScored % 2 !== 0) {
+                    rotateStrike();
+                }
+            } 
+            
+            else {
+                alert("Invalid input. Enter a number between 0 and 6 or 'w'.");
+                return;
+            }
+
+            if (balls % 6 === 0) {
+                bowlerArray[currentBowlerIndex].overs++;
+                currentBowlerIndex = -1;  // bowler change ek over ke baad
+                showBowlerSelection();
+                overRuns = 0;
+                overArray.length = 0;
+                rotateStrike();
+            }
+
+            overs = Math.floor(balls / 6);
+            ballInOver = balls % 6;
+            
+            printTotalScore();
+            printOverScore();
+            printOverCard();
+            printCurrentBowler();
+            printScoreBoard();
+            printBowlerStats();
+            addCommentary(`${currentBatsmen[0].name} scored ${runScored} runs.`);
+        }
+
+        function showBowlerSelection() {
+            let bowlerSelectionDiv = document.getElementById("bowlerSelection");
+            let bowlerDropdown = document.getElementById("bowlerDropdown");
+            bowlerDropdown.innerHTML = ""; 
+
+            bowlerArray.forEach((bowler, index) => {
+                let option = document.createElement("option");
+                option.value = index;
+                option.text = bowler.name;
+                bowlerDropdown.appendChild(option);
+            });
+
+            bowlerSelectionDiv.style.display = "block";
+        }
+
+        function changeBowler() {
+            let bowlerDropdown = document.getElementById("bowlerDropdown");
+            currentBowlerIndex = parseInt(bowlerDropdown.value);
+            if (isNaN(currentBowlerIndex) || currentBowlerIndex < 0) {
+                alert("Please select a valid bowler.");
+                return;
+            }
+            document.getElementById("bowlerSelection").style.display = "none";
+            printCurrentBowler();
+        }
+        
+        function printTotalScore() {
+            let scoreBoard = document.getElementById("totalScore");
+            scoreBoard.innerHTML = "Total Scores: " + run + "/" + wkts + "  ;  Overs: " + overs + "." + ballInOver;
+        }
+
+        function printOverScore() {
+            let overScore = document.getElementById("overScore");
+            overScore.innerHTML = "This Over: " + overRuns;
+        }
+
+        function printOverCard() {
+            const defaultColor = 'grey';
+            const colors = {
+                "4": 'orange',
+                "6": 'green',
+                "w": 'red'
+            };
+                
+            let overCard = document.getElementById("overCard");
+            overCard.innerHTML = "";
+            for (let i = 0; i < overArray.length; i++) {
+                const value = overArray[i];
+                const color = colors[value] || defaultColor;
+                const childElement = document.createElement('div');
+                childElement.style.backgroundColor = color;
+                childElement.textContent = value;
+                overCard.appendChild(childElement);
+            }
+        }
+
+        function rotateStrike() {
+            if (currentBatsmen.length === 2) {
+                [currentBatsmen[0], currentBatsmen[1]] = [currentBatsmen[1], currentBatsmen[0]];
+            }
+        }
+
+        function printScoreBoard() {
+            let playersTable = document.getElementById("playersTable").getElementsByTagName('tbody')[0];
+            playersTable.innerHTML = ""; 
+            playerArray.forEach(player => {
+                let row = playersTable.insertRow();
+                row.insertCell(0).innerHTML = currentBatsmen[0] === player ? player.name + "*" : player.name;
+                row.insertCell(1).innerHTML = player.runs;
+                row.insertCell(2).innerHTML = player.ballsFaced;
+                row.insertCell(3).innerHTML = player.fours;
+                row.insertCell(4).innerHTML = player.sixes;
+                row.insertCell(5).innerHTML = player.status;
+            });
+        }
+
+        function printBowlerStats() {
+            let bowlersTable = document.getElementById("bowlersTable").getElementsByTagName('tbody')[0];
+            bowlersTable.innerHTML = "";
+            bowlerArray.forEach(bowler => {
+                let row = bowlersTable.insertRow();
+                row.insertCell(0).innerHTML = bowler.name;
+                row.insertCell(1).innerHTML = bowler.overs;
+                row.insertCell(2).innerHTML = bowler.runsConceded;
+                row.insertCell(3).innerHTML = bowler.wickets;
+            });
+        }
+
+        function printCurrentBowler() {
+            let currentBowlerDiv = document.getElementById("currentBowler");
+            currentBowlerDiv.innerHTML = "Current Bowler: " + (currentBowlerIndex !== -1 ? bowlerArray[currentBowlerIndex].name : "None");
+        }
+
+        function addCommentary(message) {
+            let commentaryDiv = document.getElementById("commentary");
+            let commentaryMessage = document.createElement("div");
+            commentaryMessage.textContent = message;
+            commentaryDiv.appendChild(commentaryMessage);
+        }
+
+        printTotalScore();
+        printOverScore();
+        printOverCard();
+        printCurrentBowler();
+        printScoreBoard();
+        printBowlerStats();
+
+    </script>
+</body>
+</html>
